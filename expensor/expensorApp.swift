@@ -11,7 +11,7 @@ import SwiftUI
 struct expensorApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            AppView()
         }
     }
 }
