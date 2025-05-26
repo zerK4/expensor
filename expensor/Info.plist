@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleURLTypes</key>
+       <array>
+           <dict>
+               <key>CFBundleURLSchemes</key>
+               <array>
+                   <string>ro.expensor.tracker</string> </array>
+               <key>CFBundleURLName</key>
+               <string>ro.expensor.tracker</string> <key>CFBundleTypeRole</key>
+               <string>Editor</string>
+           </dict>
+       </array>
+	<key>SUPABASE_ANON_KEY</key>
+	<string>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJranh3c2x6cG9yY29peG52cHRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5ODIzODEsImV4cCI6MjA2MzU1ODM4MX0.9rGfFZRW1iLCUHiEwUKItxA3gTA-oop8Bn1i-rmsF8Q</string>
+	<key>SUPABASE_URL</key>
+	<string>https://rkjxwslzporcoixnvptb.supabase.co</string>
+</dict>
+</plist>
