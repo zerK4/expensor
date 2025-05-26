@@ -1,0 +1,133 @@
+[
+  {
+    "company": { "name": "SUSHI WOK SRL", "cif": "RO12345678" },
+    "items": [
+      { "name": "Meniu Somon", "quantity": 1, "unit_price": 32.00, "total": 32.00 },
+      { "name": "Apa plata 0.5L", "quantity": 1, "unit_price": 5.00, "total": 5.00 }
+    ],
+    "totals": { "total": 37.00, "paid_card": 37.00 },
+    "taxes": { "TVA_9%": 2.70 }
+  },
+  {
+    "company": { "name": "Kaufland Romania", "cif": "RO23456789" },
+    "items": [
+      { "name": "Paine alba", "quantity": 2, "unit_price": 3.20, "total": 6.40 },
+      { "name": "Lapte 1L", "quantity": 1, "unit_price": 5.50, "total": 5.50 },
+      { "name": "Ciocolata Milka", "quantity": 1, "unit_price": 7.30, "total": 7.30 }
+    ],
+    "totals": { "total": 19.20, "paid_cash": 20.00 },
+    "taxes": { "TVA_9%": 1.58 }
+  },
+  {
+    "company": { "name": "LUKOIL", "cif": "RO99887766" },
+    "items": [
+      { "name": "Benzina E5 20L", "quantity": 1, "unit_price": 7.35, "total": 147.00 }
+    ],
+    "totals": { "total": 147.00, "paid_card": 147.00 },
+    "taxes": { "TVA_19%": 23.46 }
+  },
+  {
+    "company": { "name": "McDonald's Unirii", "cif": "RO11223344" },
+    "items": [
+      { "name": "Big Mac Menu", "quantity": 1, "unit_price": 25.90, "total": 25.90 },
+      { "name": "Sundae Ciocolata", "quantity": 1, "unit_price": 6.00, "total": 6.00 }
+    ],
+    "totals": { "total": 31.90, "paid_card": 31.90 },
+    "taxes": { "TVA_9%": 2.63 }
+  },
+  {
+    "company": { "name": "IKEA Romania", "cif": "RO66778899" },
+    "items": [
+      { "name": "Lampa LED", "quantity": 1, "unit_price": 49.99, "total": 49.99 },
+      { "name": "Scaun ergonomic", "quantity": 1, "unit_price": 199.00, "total": 199.00 }
+    ],
+    "totals": { "total": 248.99, "paid_card": 248.99 },
+    "taxes": { "TVA_19%": 39.78 }
+  },
+  {
+    "company": { "name": "Mega Image", "cif": "RO87654321" },
+    "items": [
+      { "name": "Banane", "quantity": 1, "unit_price": 4.50, "total": 4.50 },
+      { "name": "Detergent Ariel", "quantity": 1, "unit_price": 28.00, "total": 28.00 }
+    ],
+    "totals": { "total": 32.50, "paid_cash": 35.00 },
+    "taxes": { "TVA_19%": 5.19 }
+  },
+  {
+    "company": { "name": "Lidl Romania", "cif": "RO55667788" },
+    "items": [
+      { "name": "Ouă 10 buc", "quantity": 1, "unit_price": 9.99, "total": 9.99 },
+      { "name": "Cafea macinata", "quantity": 1, "unit_price": 13.50, "total": 13.50 }
+    ],
+    "totals": { "total": 23.49, "paid_card": 23.49 },
+    "taxes": { "TVA_9%": 1.94 }
+  },
+  {
+    "company": { "name": "Petrom", "cif": "RO88776655" },
+    "items": [
+      { "name": "Motorina Standard 30L", "quantity": 1, "unit_price": 7.15, "total": 214.50 }
+    ],
+    "totals": { "total": 214.50, "paid_card": 214.50 },
+    "taxes": { "TVA_19%": 34.30 }
+  },
+  {
+    "company": { "name": "Cinema City AFI", "cif": "RO77889900" },
+    "items": [
+      { "name": "Bilet film", "quantity": 2, "unit_price": 26.00, "total": 52.00 },
+      { "name": "Popcorn mare", "quantity": 1, "unit_price": 15.00, "total": 15.00 }
+    ],
+    "totals": { "total": 67.00, "paid_card": 67.00 },
+    "taxes": { "TVA_9%": 5.52 }
+  },
+  {
+    "company": { "name": "Decathlon", "cif": "RO11122233" },
+    "items": [
+      { "name": "Colanti sport", "quantity": 1, "unit_price": 79.90, "total": 79.90 },
+      { "name": "Bidon apa 750ml", "quantity": 1, "unit_price": 12.50, "total": 12.50 }
+    ],
+    "totals": { "total": 92.40, "paid_card": 92.40 },
+    "taxes": { "TVA_19%": 14.74 }
+  },
+  {
+    "company": { "name": "eMAG", "cif": "RO99882211" },
+    "items": [
+      { "name": "Mouse Logitech", "quantity": 1, "unit_price": 89.99, "total": 89.99 }
+    ],
+    "totals": { "total": 89.99, "paid_card": 89.99 },
+    "taxes": { "TVA_19%": 14.34 }
+  },
+  {
+    "company": { "name": "H&M", "cif": "RO66554433" },
+    "items": [
+      { "name": "Tricou barbati", "quantity": 2, "unit_price": 29.90, "total": 59.80 }
+    ],
+    "totals": { "total": 59.80, "paid_cash": 60.00 },
+    "taxes": { "TVA_19%": 9.56 }
+  },
+  {
+    "company": { "name": "Carrefour", "cif": "RO44332211" },
+    "items": [
+      { "name": "Salam Victoria", "quantity": 1, "unit_price": 10.25, "total": 10.25 },
+      { "name": "Coca Cola 2L", "quantity": 1, "unit_price": 7.80, "total": 7.80 },
+      { "name": "Branza Fagaras", "quantity": 1, "unit_price": 5.90, "total": 5.90 }
+    ],
+    "totals": { "total": 23.95, "paid_cash": 24.00 },
+    "taxes": { "TVA_9%": 1.91 }
+  },
+  {
+    "company": { "name": "Starbucks", "cif": "RO33344455" },
+    "items": [
+      { "name": "Caffe Latte Tall", "quantity": 1, "unit_price": 14.50, "total": 14.50 }
+    ],
+    "totals": { "total": 14.50, "paid_card": 14.50 },
+    "taxes": { "TVA_9%": 1.20 }
+  },
+  {
+    "company": { "name": "Altex", "cif": "RO22334455" },
+    "items": [
+      { "name": "Boxe Bluetooth", "quantity": 1, "unit_price": 129.99, "total": 129.99 }
+    ],
+    "totals": { "total": 129.99, "paid_card": 129.99 },
+    "taxes": { "TVA_19%": 20.75 }
+  }
+]
