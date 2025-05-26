@@ -83,7 +83,7 @@ struct AuthView: View {
         .onOpenURL(perform: { url in
             Task {
                 do {
-                    try await supabase.auth.session(from: url)
+                    try await SupabaseManager.shared.auth.session(from: url)
                     await checkProfile()
                 } catch {
                     withAnimation { self.result = .failure(error.localizedDescription) }
@@ -202,7 +202,7 @@ struct AuthView: View {
             defer { withAnimation { isLoading = false } }
 
             do {
-                try await supabase.auth.signInWithOTP(
+                try await SupabaseManager.shared.auth.signInWithOTP(
                     email: email,
                     redirectTo: URL(string: "ro.expensor.tracker://login-callback")
                 )
@@ -223,8 +223,8 @@ struct AuthView: View {
     }
 
     func checkProfile() async {
-        guard let user = try? await supabase.auth.session.user else { return }
-        let response = try? await supabase
+        guard let user = try? await SupabaseManager.shared.auth.session.user else { return }
+        let response = try? await SupabaseManager.shared
             .from("profiles")
             .select()
             .eq("id", value: user.id.uuidString)
@@ -253,13 +253,13 @@ struct AuthView: View {
             return
         }
         Task {
-            guard let user = try? await supabase.auth.session.user else {
+            guard let user = try? await SupabaseManager.shared.auth.session.user else {
                 profileError = "User not found."
                 return
             }
             isSavingProfile = true
             do {
-                try await supabase
+                try await SupabaseManager.shared
                     .from("profiles")
                     .insert([
                         "id": user.id.uuidString,

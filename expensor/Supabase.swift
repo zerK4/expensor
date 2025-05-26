@@ -1,14 +1,16 @@
-//
-//  Supabase.swift
-//  expensor
-//
-//  Created by Sebastian Pavel on 18.05.2025.
-//
-
 import Foundation
 import Supabase
 
-let supabase = SupabaseClient(
-  supabaseURL: URL(string: "https://rkjxwslzporcoixnvptb.supabase.co")!,
-  supabaseKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJranh3c2x6cG9yY29peG52cHRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc1Mzg4NDEsImV4cCI6MjA2MzExNDg0MX0.sz-GFI9Qfa_5BKwj6PFDbkNiajCkVhBsKj8sEn47iLI"
-)
+class SupabaseManager {
+    static let shared: SupabaseClient = {
+        guard
+            let urlString = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_URL") as? String,
+            let key = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_ANON_KEY") as? String,
+            let url = URL(string: urlString)
+        else {
+            fatalError("❌ Missing or invalid Supabase configuration in Info.plist")
+        }
+
+        return SupabaseClient(supabaseURL: url, supabaseKey: key)
+    }()
+}
