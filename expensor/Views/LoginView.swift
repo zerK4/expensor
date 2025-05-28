@@ -23,6 +23,59 @@ let currencies: [Currency] = [
     Currency(id: "JPY", name: "Japanese Yen", symbol: "JPY", sfSymbol: "yensign.circle")
 ]
 
+// Global style for the background grid and radial gradient
+extension View {
+    func minimalistBackground() -> some View {
+        ZStack {
+            Color.black.ignoresSafeArea() // Base black background
+            
+            // Grid lines
+            GridBackground()
+            
+            // Radial gradient blur
+            RadialGradient(
+                gradient: Gradient(colors: [Color.white.opacity(0.1), Color.black]),
+                center: .top,
+                startRadius: 0,
+                endRadius: 700 // Adjust to control blur spread
+            )
+            .offset(y: -UIScreen.main.bounds.height * 0.3) // Position higher
+            .ignoresSafeArea()
+            .opacity(0.8) // Control visibility of the radial gradient
+        }
+    }
+}
+
+// Custom GridBackground View
+struct GridBackground: View {
+    var body: some View {
+        GeometryReader { geometry in
+            Path { path in
+                let columns = Int(geometry.size.width / 14) // 14px grid size
+                let rows = Int(geometry.size.height / 24)  // 24px grid size
+
+                // Vertical lines
+                for i in 0..<columns {
+                    let x = CGFloat(i) * 14
+                    path.move(to: CGPoint(x: x, y: 0))
+                    path.addLine(to: CGPoint(x: x, y: geometry.size.height))
+                }
+
+                // Horizontal lines
+                for i in 0..<rows {
+                    let y = CGFloat(i) * 24
+                    path.move(to: CGPoint(x: 0, y: y))
+                    path.addLine(to: CGPoint(x: geometry.size.width, y: y))
+                }
+            }
+            // CORRECTED LINE HERE:
+            .stroke(Color(red: 0.3098039329, green: 0.3098039329, blue: 0.3098039329, opacity: 0.18), lineWidth: 1)
+            .drawingGroup() // Improves performance for complex paths
+        }
+    }
+}
+
+
 struct LoginView: View {
     @State private var email = ""
     @State private var isLoading = false
@@ -30,7 +83,6 @@ struct LoginView: View {
     @Namespace private var animation
     @FocusState private var emailFocused: Bool
     @State private var shake = false
-    @State private var animateGradient = false
     @State private var showSuccessCard = false
     @State private var showProfileSetup = false
 
@@ -43,15 +95,8 @@ struct LoginView: View {
 
     var body: some View {
         ZStack {
-            // Animated gradient background
-            LinearGradient(
-                gradient: Gradient(colors: [.blue, .purple, .indigo, .cyan]),
-                startPoint: animateGradient ? .topLeading : .bottomTrailing,
-                endPoint: animateGradient ? .bottomTrailing : .topLeading
-            )
-            .ignoresSafeArea()
-            .animation(.easeInOut(duration: 10).repeatForever(autoreverses: true), value: animateGradient)
-            .onAppear { animateGradient = true }
+            // New minimalist background
+            minimalistBackground()
 
             VStack {
                 Spacer()
@@ -115,7 +160,7 @@ struct LoginView: View {
 
             HStack {
                 Image(systemName: "envelope")
-                    .foregroundColor(emailFocused ? .indigo : .gray)
+                    .foregroundColor(emailFocused ? .blue : .gray) // Changed to blue
                 TextField("Email", text: $email)
                     .keyboardType(.emailAddress)
                     .textContentType(.emailAddress)
@@ -123,48 +168,35 @@ struct LoginView: View {
                     .autocorrectionDisabled()
                     .focused($emailFocused)
                     .disabled(isLoading)
+                    .preferredColorScheme(.dark) // Ensure dark keyboard appearance
             }
             .padding()
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(.secondarySystemBackground).opacity(0.95))
+                    .fill(Color.white.opacity(0.05)) // Minimalist fill
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
-                            .stroke(emailFocused ? Color.indigo : Color.gray.opacity(0.2), lineWidth: 2)
+                            .stroke(emailFocused ? Color.blue : Color.white.opacity(0.1), lineWidth: 1) // Blue border
                     )
             )
-            .shadow(color: .black.opacity(0.07), radius: 2, x: 0, y: 1)
             .offset(x: shake ? -10 : 0)
             .animation(shake ? .default.repeatCount(3, autoreverses: true) : .default, value: shake)
 
             Button(action: signInButtonTapped) {
-                ZStack {
-                    LinearGradient(
-                        colors: [Color.indigo, Color.purple],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                    .cornerRadius(14)
+                Text(isLoading ? "Sending..." : "Send Magic Link")
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
                     .frame(height: 50)
-                    .opacity(isLoading ? 0.7 : 1)
-
-                    HStack {
-                        if isLoading {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                        }
-                        Text(isLoading ? "Sending..." : "Send Magic Link")
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                    }
-                }
+                    .background(
+                        RoundedRectangle(cornerRadius: 14)
+                            .fill(Color.blue) // Solid blue button
+                            .opacity(isLoading ? 0.7 : 1)
+                    )
             }
-            .frame(maxWidth: .infinity, minHeight: 50)
-            .cornerRadius(14)
-            .shadow(color: .indigo.opacity(0.15), radius: 8, x: 0, y: 4)
             .disabled(isLoading || !isValidEmail(email))
             .scaleEffect(isLoading ? 0.98 : 1.0)
-            .animation(.easeInOut, value: isLoading)
+            .animation(.easeInOut(duration: 0.2), value: isLoading) // Smoother animation for button press
 
             if case .failure(let error) = result {
                 Label(error, systemImage: "exclamationmark.triangle")
@@ -176,14 +208,16 @@ struct LoginView: View {
         .padding(32)
         .background(
             RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .fill(.ultraThickMaterial)
+                .fill(Color.black.opacity(0.4)) // Black with opacity
+                .background(.ultraThinMaterial) // Background blur
+                .cornerRadius(28) // Apply corner radius after blur
                 .overlay(
                     RoundedRectangle(cornerRadius: 28)
-                        .stroke(Color.white.opacity(0.18), lineWidth: 1.5)
+                        .stroke(Color.white.opacity(0.1), lineWidth: 1) // Subtle white stroke
                 )
         )
         .padding(.horizontal, 24)
-        .shadow(color: .black.opacity(0.10), radius: 16, x: 0, y: 8)
+        .shadow(color: .black.opacity(0.2), radius: 16, x: 0, y: 8) // Darker shadow
     }
 
     func signInButtonTapped() {
@@ -308,14 +342,16 @@ struct SuccessCard: View {
         .padding(32)
         .background(
             RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .fill(.ultraThickMaterial)
+                .fill(Color.black.opacity(0.4)) // Black with opacity
+                .background(.ultraThinMaterial) // Background blur
+                .cornerRadius(28)
                 .overlay(
                     RoundedRectangle(cornerRadius: 28)
-                        .stroke(Color.white.opacity(0.18), lineWidth: 1.5)
+                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
                 )
         )
         .padding(.horizontal, 24)
-        .shadow(color: .black.opacity(0.10), radius: 16, x: 0, y: 8)
+        .shadow(color: .black.opacity(0.2), radius: 16, x: 0, y: 8)
     }
 }
 
@@ -334,32 +370,73 @@ struct ProfileSetupCard: View {
                 .foregroundColor(.white)
             VStack(spacing: 12) {
                 TextField("First Name", text: $firstName)
-                    .textFieldStyle(.roundedBorder)
+                    .textFieldStyle(.plain) // Use plain style for custom background
+                    .padding()
+                    .background(Color.white.opacity(0.05).cornerRadius(12)) // Minimalist fill
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.white.opacity(0.1), lineWidth: 1) // Subtle border
+                    )
+                    .foregroundColor(.white) // Text color
                     .autocapitalization(.words)
+                    .preferredColorScheme(.dark)
+
                 TextField("Last Name", text: $lastName)
-                    .textFieldStyle(.roundedBorder)
+                    .textFieldStyle(.plain)
+                    .padding()
+                    .background(Color.white.opacity(0.05).cornerRadius(12))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                    )
+                    .foregroundColor(.white)
                     .autocapitalization(.words)
+                    .preferredColorScheme(.dark)
             }
+            
+            // Customizing the Picker
             Picker("Currency", selection: $selectedCurrencyId) {
                 ForEach(currencies) { currency in
                     HStack {
                         Image(systemName: currency.sfSymbol)
                         Text("\(currency.symbol) - \(currency.name)")
-                    }.tag(currency.id)
+                    }
+                    .foregroundColor(.white) // Ensure text color is white
+                    .tag(currency.id)
                 }
             }
-            .pickerStyle(.menu)
+            .pickerStyle(.menu) // Keeps it as a dropdown menu
+            .padding(.horizontal)
+            .background(Color.white.opacity(0.05).cornerRadius(12))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.white.opacity(0.1), lineWidth: 1)
+            )
+            .accentColor(.white) // Changes the chevron color on iOS 15+
+            
             Button(action: onSave) {
-                if isSaving {
-                    ProgressView()
-                } else {
-                    Text("Save Profile")
-                        .fontWeight(.semibold)
-                        .frame(maxWidth: .infinity)
+                ZStack {
+                    if isSaving {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                    } else {
+                        Text("Save Profile")
+                            .fontWeight(.semibold)
+                            .foregroundColor(.white)
+                    }
                 }
+                .frame(maxWidth: .infinity)
+                .frame(height: 50)
+                .background(
+                    RoundedRectangle(cornerRadius: 14)
+                        .fill(Color.blue) // Solid blue button
+                        .opacity(isSaving ? 0.7 : 1)
+                )
             }
-            .buttonStyle(.borderedProminent)
             .disabled(isSaving || firstName.trimmingCharacters(in: .whitespaces).isEmpty || lastName.trimmingCharacters(in: .whitespaces).isEmpty)
+            .scaleEffect(isSaving ? 0.98 : 1.0)
+            .animation(.easeInOut(duration: 0.2), value: isSaving)
+
             if let error = error {
                 Label(error, systemImage: "exclamationmark.triangle")
                     .foregroundColor(.red)
@@ -370,14 +447,16 @@ struct ProfileSetupCard: View {
         .padding(32)
         .background(
             RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .fill(.ultraThickMaterial)
+                .fill(Color.black.opacity(0.4))
+                .background(.ultraThinMaterial)
+                .cornerRadius(28)
                 .overlay(
                     RoundedRectangle(cornerRadius: 28)
-                        .stroke(Color.white.opacity(0.18), lineWidth: 1.5)
+                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
                 )
         )
         .padding(.horizontal, 24)
-        .shadow(color: .black.opacity(0.10), radius: 16, x: 0, y: 8)
+        .shadow(color: .black.opacity(0.2), radius: 16, x: 0, y: 8)
     }
 }
 

@@ -109,8 +109,8 @@ struct ReceiptEntry: Identifiable, Codable {
     var total: Double
     var categoryId: String
     var companyId: String
-    var createdAt: Date?
-    var updatedAt: Date?
+    var createdAt: Date
+    var updatedAt: Date
 
     enum CodingKeys: String, CodingKey {
         case id, userId = "user_id", companies, items, taxes, date, categories, categoryId = "category_id", companyId = "company_id"
@@ -131,8 +131,8 @@ struct ReceiptEntry: Identifiable, Codable {
         paidCash: Double? = nil,
         paidCard: Double? = nil,
         total: Double = 0.0,
-        createdAt: Date?,
-        updatedAt: Date?
+        createdAt: Date,
+        updatedAt: Date
     ) {
         self.id = id
         self.userId = userId

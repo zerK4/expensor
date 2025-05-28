@@ -1,15 +1,17 @@
-import Foundation
 import SwiftUI
 
 struct ReceiptDetailSheet: View {
     let receipt: ReceiptEntry
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
+    
+    // Colors adapt to light/dark mode
+    private var cardBackground: Color {
+        colorScheme == .dark ? Color(white: 0.15) : .white
+    }
     
     private var formattedDate: String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .short
-        return formatter.string(from: receipt.date)
+        receipt.date.formatted(date: .abbreviated, time: .shortened)
     }
     
     private var formattedTotal: String {
@@ -20,150 +22,120 @@ struct ReceiptDetailSheet: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
-                VStack(spacing: 16) {
-                    headerCard
+                VStack(spacing: 20) {
+                    headerSection
                     
                     if !receipt.items.isEmpty {
-                        itemsCard
+                        itemsSection
                     }
                     
-                    paymentMethodsCard
+                    if hasPaymentMethods {
+                        paymentMethodsSection
+                    }
                     
-                    metadataCard
+                    metadataSection
                 }
-                .padding()
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
             }
+//            .background(sheetBackground)
             .navigationTitle("Receipt Details")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: { dismiss() }) {
-                        Text("Done")
-                            .fontWeight(.medium)
-                    }
+                    Button("Done") { dismiss() }
+                        .fontWeight(.medium)
+                        .foregroundColor(colorScheme == .dark ? .white : .blue)
                 }
             }
-            .background(Color(.systemGroupedBackground))
         }
+        .presentationDetents([.medium, .large])
+//        .presentationBackground(sheetBackground)
+        .presentationCornerRadius(24) // Rounded corners for the sheet
+        .presentationDragIndicator(.visible)
     }
     
-    // MARK: - Card Components
+    // MARK: - Computed Properties
     
-    private var headerCard: some View {
-        CardView {
+    private var hasPaymentMethods: Bool {
+        (receipt.paidCard ?? 0) > 0 || (receipt.paidCash ?? 0) > 0
+    }
+    
+    // MARK: - Sections
+    
+    private var headerSection: some View {
+        CardView(backgroundColor: cardBackground) {
             VStack(alignment: .leading, spacing: 16) {
                 HStack(alignment: .top) {
-                    companyInfo
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(receipt.companies.name)
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                            .foregroundColor(colorScheme == .dark ? .white : .primary)
+                        
+                        if let cif = receipt.companies.cif {
+                            Text("CIF: \(cif)")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
+                    }
+                    
                     Spacer()
-                    categoryBadge
+                    
+                    if let category = receipt.categories {
+                        categoryBadge(category: category)
+                    }
                 }
                 
                 Divider()
+                    .overlay(Color.gray.opacity(0.2))
                 
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("DATE")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
+                        Text("Date")
+                            .font(.caption)
+                            .foregroundColor(.gray)
                         Text(formattedDate)
                             .font(.subheadline)
+                            .foregroundColor(colorScheme == .dark ? .white : .primary)
                     }
                     
                     Spacer()
                     
                     VStack(alignment: .trailing, spacing: 4) {
-                        Text("TOTAL")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
+                        Text("Total")
+                            .font(.caption)
+                            .foregroundColor(.gray)
                         Text(formattedTotal)
                             .font(.title2)
                             .fontWeight(.bold)
+                            .foregroundColor(colorScheme == .dark ? .white : .blue)
                     }
                 }
             }
-            .padding()
+            .padding(20)
         }
     }
     
-    private var companyInfo: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(receipt.companies.name)
-                .font(.title3)
-                .fontWeight(.semibold)
-            
-            if let cif = receipt.companies.cif {
-                Text("CIF: \(cif)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
+    private func categoryBadge(category: Category) -> some View {
+        HStack(spacing: 6) {
+            Text(category.icon)
+            Text(category.name.capitalized)
+                .font(.caption)
         }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(
+            Capsule()
+                .fill(colorScheme == .dark ? Color.blue.opacity(0.2) : Color.blue.opacity(0.1))
+        )
+        .foregroundColor(colorScheme == .dark ? .white : .blue)
     }
     
-    @ViewBuilder
-    private var categoryBadge: some View {
-        if let category = receipt.categories {
-            HStack(spacing: 6) {
-                Text(category.icon)
-                Text(category.name.capitalized)
-                    .font(.caption)
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .background(Color(.systemGray5))
-            .cornerRadius(12)
-        }
-    }
-    
-    @ViewBuilder
-    private var paymentMethodsCard: some View {
-        if (receipt.paidCard ?? 0) > 0 || (receipt.paidCash ?? 0) > 0 {
-            CardView(title: "PAYMENT METHODS") {
-                VStack(spacing: 12) {
-                    if let paidCard = receipt.paidCard, paidCard > 0 {
-                        paymentMethodRow(
-                            icon: "creditcard.fill",
-                            color: .blue,
-                            method: "Card",
-                            amount: paidCard
-                        )
-                    }
-                    
-                    if let paidCash = receipt.paidCash, paidCash > 0 {
-                        paymentMethodRow(
-                            icon: "banknote.fill",
-                            color: .green,
-                            method: "Cash",
-                            amount: paidCash
-                        )
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.bottom)
-            }
-        }
-    }
-    
-    private func paymentMethodRow(icon: String, color: Color, method: String, amount: Double) -> some View {
-        HStack {
-            Image(systemName: icon)
-                .foregroundColor(color)
-                .frame(width: 24)
-            
-            Text(method)
-                .font(.subheadline)
-            
-            Spacer()
-            
-            Text(String(format: "%.2f RON", amount))
-                .font(.subheadline)
-                .fontWeight(.medium)
-        }
-    }
-    
-    private var itemsCard: some View {
-        CardView(title: "ITEMS (\(receipt.items.count))") {
+    private var itemsSection: some View {
+        CardView(title: "Items", backgroundColor: cardBackground) {
             LazyVStack(spacing: 0) {
                 ForEach(Array(receipt.items.enumerated()), id: \.element.id) { index, item in
                     VStack(spacing: 0) {
@@ -176,20 +148,31 @@ struct ReceiptDetailSheet: View {
                     }
                 }
             }
-            .padding(.bottom)
+            .padding(.vertical, 8)
         }
     }
     
     private func itemRow(item: Item) -> some View {
         HStack(alignment: .top, spacing: 12) {
+            Circle()
+                .fill(colorScheme == .dark ? Color.blue.opacity(0.2) : Color.blue.opacity(0.1))
+                .frame(width: 36, height: 36)
+                .overlay(
+                    Text(item.name.prefix(1))
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundColor(colorScheme == .dark ? .white : .blue)
+                )
+            
             VStack(alignment: .leading, spacing: 4) {
                 Text(item.name)
                     .font(.subheadline)
                     .fontWeight(.medium)
+                    .foregroundColor(colorScheme == .dark ? .white : .primary)
                 
                 Text("\(item.quantity) × \(String(format: "%.2f RON", item.unitPrice))")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.gray)
             }
             
             Spacer()
@@ -197,68 +180,131 @@ struct ReceiptDetailSheet: View {
             Text(String(format: "%.2f RON", item.total))
                 .font(.subheadline)
                 .fontWeight(.semibold)
+                .foregroundColor(colorScheme == .dark ? .white : .primary)
         }
-        .padding()
+        .padding(12)
         .padding(.horizontal, 4)
     }
     
-    private var metadataCard: some View {
-        CardView(title: "RECEIPT INFO") {
-            VStack(spacing: 10) {
-                infoRow(label: "Receipt ID", value: String(receipt.id.prefix(8)) + "...")
+    private var paymentMethodsSection: some View {
+        CardView(title: "Payment Methods", backgroundColor: cardBackground) {
+            VStack(spacing: 12) {
+                if let paidCard = receipt.paidCard, paidCard > 0 {
+                    paymentMethodRow(
+                        icon: "creditcard.fill",
+                        color: .blue,
+                        method: "Card",
+                        amount: paidCard
+                    )
+                }
                 
-                if let createdAt = receipt.createdAt {
-                    infoRow(
-                        label: "Created",
-                        value: DateFormatter.shortDateTime.string(from: createdAt)
+                if let paidCash = receipt.paidCash, paidCash > 0 {
+                    paymentMethodRow(
+                        icon: "banknote.fill",
+                        color: .green,
+                        method: "Cash",
+                        amount: paidCash
                     )
                 }
             }
-            .padding(.bottom)
+            .padding(.vertical, 8)
         }
     }
     
-    private func infoRow(label: String, value: String) -> some View {
+    private func paymentMethodRow(icon: String, color: Color, method: String, amount: Double) -> some View {
         HStack {
+            Image(systemName: icon)
+                .foregroundColor(color)
+                .frame(width: 36, height: 36)
+                .background(color.opacity(colorScheme == .dark ? 0.2 : 0.1))
+                .clipShape(Circle())
+            
+            Text(method)
+                .font(.subheadline)
+                .foregroundColor(colorScheme == .dark ? .white : .primary)
+            
+            Spacer()
+            
+            Text(String(format: "%.2f RON", amount))
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundColor(colorScheme == .dark ? .white : .primary)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+    }
+    
+    private var metadataSection: some View {
+        CardView(title: "Receipt Information", backgroundColor: cardBackground) {
+            VStack(spacing: 12) {
+                infoRow(
+                    icon: "number",
+                    label: "Receipt ID",
+                    value: String(receipt.id.prefix(8)) + "..."
+                )
+                
+                infoRow(
+                    icon: "calendar",
+                    label: "Created",
+                    value: receipt.createdAt.formatted(date: .abbreviated, time: .shortened)
+                )
+            }
+            .padding(.vertical, 8)
+        }
+    }
+    
+    private func infoRow(icon: String, label: String, value: String) -> some View {
+        HStack {
+            Image(systemName: icon)
+                .foregroundColor(.gray)
+                .frame(width: 36, height: 36)
+                .background(Color.gray.opacity(colorScheme == .dark ? 0.2 : 0.1))
+                .clipShape(Circle())
+            
             Text(label)
-                .font(.caption)
-                .foregroundColor(.secondary)
+                .font(.subheadline)
+                .foregroundColor(.gray)
             
             Spacer()
             
             Text(value)
-                .font(.caption)
+                .font(.subheadline)
+                .foregroundColor(colorScheme == .dark ? .white : .primary)
         }
-        .padding(.horizontal)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
     }
 }
 
-// MARK: - Reusable Components
+// MARK: - Card Component
 
 struct CardView<Content: View>: View {
     let title: String?
+    let backgroundColor: Color
     let content: Content
     
-    init(title: String? = nil, @ViewBuilder content: () -> Content) {
+    init(title: String? = nil, backgroundColor: Color = Color(.systemBackground), @ViewBuilder content: () -> Content) {
         self.title = title
+        self.backgroundColor = backgroundColor
         self.content = content()
     }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             if let title = title {
-                Text(title)
-                    .font(.footnote)
+                Text(title.uppercased())
+                    .font(.caption)
                     .fontWeight(.semibold)
-                    .foregroundColor(.secondary)
-                    .padding(.horizontal)
+                    .foregroundColor(.gray)
+                    .padding(.horizontal, 16)
                     .padding(.top, 12)
             }
             
             content
         }
-        .background(Color(.systemBackground))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(backgroundColor)
         .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+        .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
     }
 }

@@ -3,6 +3,7 @@ import SwiftUI
 struct MainTabView: View {
     @State private var selectedTab = 0
     @State private var showPlusDrawer = false
+    @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -57,26 +58,6 @@ struct MainTabView: View {
 struct DashboardView: View { var body: some View { Text("Dashboard Page") } }
 struct IncomesView: View { var body: some View { Text("Incomes Page") } }
 struct ProfileView: View { var body: some View { Text("Profile Page") } }
-
-// Drawer with 4 mock buttons
-struct PlusDrawerView: View {
-    @Binding var isPresented: Bool
-    var body: some View {
-        VStack(spacing: 24) {
-            Text("Quick Actions").font(.headline)
-            ForEach(1...4, id: \.self) { i in
-                Button("Action \(i)") { }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.blue.opacity(0.1))
-                    .cornerRadius(12)
-            }
-            Button("Close") { isPresented = false }
-                .padding(.top, 32)
-        }
-        .padding()
-    }
-}
 
 #Preview  {
     MainTabView()
