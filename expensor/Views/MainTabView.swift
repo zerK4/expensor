@@ -49,7 +49,8 @@ struct MainTabView: View {
             }
         }
         .sheet(isPresented: $showPlusDrawer) {
-            PlusDrawerView(isPresented: $showPlusDrawer)
+            PlusDrawerView(
+                isPresented: $showPlusDrawer)
         }
     }
 }

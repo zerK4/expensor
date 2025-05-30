@@ -75,8 +75,8 @@ struct ReceiptsView: View {
                    }
                }
                .refreshable {
-                   await receiptsViewModel.refreshReceipts()
-               }
+                  await receiptsViewModel.refreshReceipts()
+              }
                .sheet(item: $selectedReceipt) { receipt in
                    ReceiptDetailSheet(receipt: receipt)
                        .presentationDetents([.medium, .large])

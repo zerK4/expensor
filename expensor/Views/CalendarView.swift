@@ -33,6 +33,7 @@ struct CalendarView: View {
         }
         .clipped()
         .animation(.spring(response: 0.5, dampingFraction: 0.8, blendDuration: 0.2), value: showingFullCalendar)
+        .contentShape(Rectangle())
         .onAppear {
             if !didAppear {
                 currentPage = 0
@@ -99,6 +100,10 @@ struct CalendarView: View {
                         }
                     },
                 including: .all
+            )
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 20)
+                    .onChanged { _ in }
             )
         }
         .padding(.vertical, 8)

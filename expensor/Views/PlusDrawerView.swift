@@ -14,6 +14,7 @@ enum DrawerNavigationState: Equatable {
 // MARK: - Sheet-Compatible PlusDrawerView
 
 struct PlusDrawerView: View {
+    @EnvironmentObject var receiptsViewModel: ReceiptsViewModel
     @Binding var isPresented: Bool
     @State private var navigationState: DrawerNavigationState = .main
     @State private var selectedImage: UIImage?
@@ -383,6 +384,7 @@ struct ImagePickerView: UIViewControllerRepresentable {
 // MARK: - Image Edit View
 
 struct ImageEditView: View {
+    @EnvironmentObject var receiptsViewModel: ReceiptsViewModel
     let imageToEdit: UIImage
     let onUpload: (String?) -> Void
     let onCancel: () -> Void
@@ -505,6 +507,8 @@ struct ImageEditView: View {
                     ])
                 }
             
+                await receiptsViewModel.refreshReceipts()
+                
                 DispatchQueue.main.async {
                     isProcessing = false
                     let mockUrl = "http://192.168.1.205/receipts/\(UUID().uuidString)"
