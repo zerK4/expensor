@@ -7,7 +7,7 @@ struct ReceiptsView: View {
     @State private var selectedReceipt: ReceiptEntry?
     @State private var showReceiptDetail = false
     @Environment(\.colorScheme) var colorScheme
-    
+
     var body: some View {
         NavigationView {
             ZStack {
@@ -33,7 +33,7 @@ struct ReceiptsView: View {
 
                 }
                 .padding(.bottom, 8) // Add some space below search controls
-                
+
                 if receiptsViewModel.isLoading {
                     VStack {
                         ProgressView()
@@ -47,16 +47,16 @@ struct ReceiptsView: View {
                         Image(systemName: "exclamationmark.triangle")
                             .font(.system(size: 48))
                             .foregroundColor(.orange)
-                        
+
                         Text("Something went wrong")
                             .font(.headline)
-                        
+
                         Text(errorMessage)
                             .font(.body)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal)
-                        
+
                         Button("Try Again") {
                             Task {
                                 await receiptsViewModel.refreshReceipts()
@@ -77,28 +77,13 @@ struct ReceiptsView: View {
                     }
 
                     List {
-                        if receiptsViewModel.filteredReceipts.isEmpty && receiptsViewModel.searchQuery.isEmpty && receiptsViewModel.selectedDateRange == nil {
-                             // Only show EmptyReceiptsView if no filters are applied and list is empty
+                         if receiptsViewModel.filteredReceipts.isEmpty && (!receiptsViewModel.searchQuery.isEmpty || receiptsViewModel.selectedDateRange != nil) {
                             EmptyReceiptsView()
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                                 .listRowInsets(EdgeInsets())
                                 .listRowSeparator(.hidden)
-                        } else if receiptsViewModel.filteredReceipts.isEmpty && (!receiptsViewModel.searchQuery.isEmpty || receiptsViewModel.selectedDateRange != nil) {
-                            // Show a message when filters are applied but no results found
-                            VStack {
-                                Image(systemName: "magnifyingglass")
-                                    .font(.system(size: 48))
-                                    .foregroundColor(.secondary)
-                                Text("No Matching Receipts")
-                                    .foregroundColor(.secondary)
-                                    .padding(.top, 8)
-                            }
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .listRowInsets(EdgeInsets())
-                            .listRowSeparator(.hidden)
-
-                        }
-                        else {
+                                .environmentObject(receiptsViewModel)
+                        } else {
                             ForEach(receiptsViewModel.filteredReceipts, id: \.id) { receipt in
                                 VStack(alignment: .leading) { // Stack indicators above ReceiptCard
                                     // Display date when filtering is active
@@ -165,10 +150,10 @@ struct ReceiptsView: View {
                        .presentationCornerRadius(24)
                        .presentationDragIndicator(.visible)
                }
-           }
-        .onAppear {
-            if receiptsViewModel.filteredReceipts.isEmpty && !receiptsViewModel.isLoading {
-                Task {
+            }
+         .onAppear {
+             if receiptsViewModel.filteredReceipts.isEmpty && !receiptsViewModel.isLoading {
+                 Task {
                     await receiptsViewModel.loadReceipts()
                 }
             }
@@ -177,6 +162,7 @@ struct ReceiptsView: View {
         }
     }
 }
+
 
 extension DateFormatter {
     static let shortDateTime: DateFormatter = {
@@ -200,14 +186,14 @@ private struct PreviewContent: View {
             name: "SUSHI WOK SRL",
             cif: "RO12345678"
         )
-        
+
         let sampleCategory = Category(
             id: UUID().uuidString,
             userId: "user123",
             name: "food",
             icon: "🍔"
         )
-        
+
         let sampleReceipt = ReceiptEntry(
             id: UUID().uuidString,
             userId: "user123",
@@ -222,7 +208,7 @@ private struct PreviewContent: View {
             createdAt: Date(),
             updatedAt: Date()
         )
-        
+
         NavigationView {
             ScrollView {
                 LazyVStack(spacing: 12) {

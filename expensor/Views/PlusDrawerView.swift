@@ -19,17 +19,17 @@ struct PlusDrawerView: View {
     @State private var navigationState: DrawerNavigationState = .main
     @State private var selectedImage: UIImage?
     @State private var processedImageUrl: String?
-    
+
     // Track current detent for proper spacing
     @State private var currentDetent: PresentationDetent = .medium
-    
+
     var body: some View {
         NavigationView {
             ZStack {
                 // Background
                 Color(.systemGroupedBackground)
                     .ignoresSafeArea()
-                
+
                 if navigationState == .main {
                     mainDrawerContent
                 } else {
@@ -48,7 +48,7 @@ struct PlusDrawerView: View {
             }
         }
     }
-    
+
     // Dynamic presentation detents based on navigation state
     private var presentationDetents: Set<PresentationDetent> {
         switch navigationState {
@@ -60,9 +60,9 @@ struct PlusDrawerView: View {
             return [.medium, .large]
         }
     }
-    
+
     // MARK: - Main Drawer Content
-    
+
     private var mainDrawerContent: some View {
         GeometryReader { geometry in
             ScrollView {
@@ -72,11 +72,11 @@ struct PlusDrawerView: View {
                         Image(systemName: "plus.circle.fill")
                             .font(.system(size: 48))
                             .foregroundStyle(.blue)
-                        
+
                         Text("Quick Actions")
                             .font(.title2)
                             .fontWeight(.bold)
-                        
+
                         Text("Choose how you'd like to add your receipt")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
@@ -85,10 +85,10 @@ struct PlusDrawerView: View {
                     }
                     .padding(.top, 24)
                     .padding(.horizontal, 20)
-                    
+
                     Spacer()
                         .frame(height: currentDetent == .medium ? 20 : 32)
-                    
+
                     // Action buttons
                     VStack(spacing: 16) {
                         HStack(spacing: 16) {
@@ -101,7 +101,7 @@ struct PlusDrawerView: View {
                                     navigationState = .imagePicker(sourceType: .camera)
                                 }
                             )
-                            
+
                             ModernActionButton(
                                 icon: "photo.on.rectangle.angled",
                                 title: "",
@@ -112,7 +112,7 @@ struct PlusDrawerView: View {
                                 }
                             )
                         }
-                        
+
                         ModernActionButton(
                             icon: "doc.text.fill",
                             title: "Manual Entry",
@@ -125,10 +125,10 @@ struct PlusDrawerView: View {
                         )
                     }
                     .padding(.horizontal, 20)
-                    
+
                     Spacer()
                         .frame(height: currentDetent == .medium ? 16 : 32)
-                    
+
                     // Close button
                     Button(action: {
                         isPresented = false
@@ -147,15 +147,15 @@ struct PlusDrawerView: View {
             }
         }
     }
-    
+
     // MARK: - Navigation Content
-    
+
     @ViewBuilder
     private var navigationContent: some View {
         switch navigationState {
         case .main:
             EmptyView()
-            
+
         case .imagePicker(let sourceType):
             ImagePickerWrapperView(
                 sourceType: sourceType,
@@ -168,7 +168,7 @@ struct PlusDrawerView: View {
                     currentDetent = .medium
                 }
             )
-            
+
         case .imageEdit(let image):
             ImageEditView(
                 imageToEdit: image,
@@ -182,7 +182,7 @@ struct PlusDrawerView: View {
                     currentDetent = .medium
                 }
             )
-            
+
         case .addReceipt(let imageUrl):
             AddReceiptView(
                 imageUrl: imageUrl,
@@ -207,9 +207,9 @@ struct ModernActionButton: View {
     let color: Color
     var isWide: Bool = false
     let action: () -> Void
-    
+
     @State private var isPressed = false
-    
+
     var body: some View {
         Button(action: action) {
             HStack(spacing: 16) {
@@ -218,25 +218,25 @@ struct ModernActionButton: View {
                     Circle()
                         .fill(color.opacity(0.15))
                         .frame(width: 50, height: 50)
-                    
+
                     Image(systemName: icon)
                         .font(.system(size: 22, weight: .medium))
                         .foregroundColor(color)
                 }
-                
+
                 if isWide {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(title)
                             .font(.system(size: 18, weight: .semibold))
                             .foregroundColor(.primary)
-                        
+
                         Text(subtitle)
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(.secondary)
                     }
-                    
+
                     Spacer()
-                    
+
                     Image(systemName: "chevron.right")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(Color.gray.opacity(0.6))
@@ -265,11 +265,11 @@ struct ModernActionButton: View {
             view.overlay(
                 VStack(spacing: 6) {
                     Spacer()
-                    
+
                     Text(title)
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.primary)
-                    
+
                     Text(subtitle)
                         .font(.system(size: 12, weight: .medium))
                         .foregroundColor(.secondary)
@@ -287,7 +287,7 @@ struct ImagePickerWrapperView: View {
     let sourceType: UIImagePickerController.SourceType
     let onImageSelected: (UIImage) -> Void
     let onCancel: () -> Void
-    
+
     var body: some View {
         GeometryReader { geometry in
             VStack(spacing: 0) {
@@ -300,10 +300,10 @@ struct ImagePickerWrapperView: View {
                 }
                 .padding(.top, 12)
                 .padding(.horizontal, 20)
-                
+
 //                Spacer()
 //                    .frame(height: 24)
-                
+
                 // Image picker with better framing
                 ImagePickerView(
                     sourceType: sourceType,
@@ -320,10 +320,10 @@ struct ImagePickerWrapperView: View {
                 .frame(height: max(650, geometry.size.height * 0.6))
                 .cornerRadius(30)
                 .padding(.horizontal, 20)
-                
+
                 Spacer()
                     .frame(height: 24)
-                
+
                 // Cancel button with proper spacing
                 Button("Cancel") {
                     onCancel()
@@ -341,27 +341,27 @@ struct ImagePickerWrapperView: View {
 struct ImagePickerView: UIViewControllerRepresentable {
     let sourceType: UIImagePickerController.SourceType
     let onResult: (Result<UIImage, Error>) -> Void
-    
+
     func makeUIViewController(context: Context) -> UIImagePickerController {
         let picker = UIImagePickerController()
         picker.sourceType = sourceType
         picker.delegate = context.coordinator
         return picker
     }
-    
+
     func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
-    
+
     func makeCoordinator() -> Coordinator {
         Coordinator(onResult: onResult)
     }
-    
+
     class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
         let onResult: (Result<UIImage, Error>) -> Void
-        
+
         init(onResult: @escaping (Result<UIImage, Error>) -> Void) {
             self.onResult = onResult
         }
-        
+
         func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
             if let image = info[.originalImage] as? UIImage {
                 onResult(.success(image))
@@ -369,12 +369,12 @@ struct ImagePickerView: UIViewControllerRepresentable {
                 onResult(.failure(ImagePickerError.noImage))
             }
         }
-        
+
         func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
             onResult(.failure(ImagePickerError.cancelled))
         }
     }
-    
+
     enum ImagePickerError: Error {
         case noImage
         case cancelled
@@ -388,10 +388,10 @@ struct ImageEditView: View {
     let imageToEdit: UIImage
     let onUpload: (String?) -> Void
     let onCancel: () -> Void
-    
+
     @State private var isProcessing = false
     @State private var processingProgress: Double = 0.0
-    
+
     var body: some View {
         GeometryReader { geometry in
             ZStack {
@@ -402,7 +402,7 @@ struct ImageEditView: View {
                             Text("Review & Process")
                                 .font(.title2)
                                 .fontWeight(.bold)
-                            
+
                             Text("AI will extract receipt details automatically")
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
@@ -411,10 +411,10 @@ struct ImageEditView: View {
                         }
                         .padding(.top, 24)
                         .padding(.horizontal, 20)
-                        
+
                         Spacer()
                             .frame(height: 24)
-                        
+
                         // Image preview with better sizing
                         VStack(spacing: 16) {
                             Image(uiImage: imageToEdit)
@@ -423,16 +423,16 @@ struct ImageEditView: View {
                                 .frame(maxHeight: min(400, geometry.size.height * 0.5))
                                 .cornerRadius(12)
                                 .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
-                            
+
                             Text("Receipt image ready for processing")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
                         .padding(.horizontal, 20)
-                        
+
                         Spacer()
                             .frame(height: 32)
-                        
+
                         // Action buttons with proper spacing
                         VStack(spacing: 16) {
                             Button(action: {
@@ -447,7 +447,7 @@ struct ImageEditView: View {
                                         Image(systemName: "sparkles")
                                             .font(.system(size: 16, weight: .semibold))
                                     }
-                                    
+
                                     Text(isProcessing ? "Processing..." : "Process with AI")
                                         .font(.system(size: 16, weight: .semibold))
                                 }
@@ -464,7 +464,7 @@ struct ImageEditView: View {
                                 .cornerRadius(12)
                             }
                             .disabled(isProcessing)
-                            
+
                             Button("Cancel") {
                                 onCancel()
                             }
@@ -476,7 +476,7 @@ struct ImageEditView: View {
                     }
                     .frame(minHeight: geometry.size.height)
                 }
-                
+
                 // Processing overlay
                 if isProcessing {
                     ProcessingOverlayView(progress: processingProgress)
@@ -484,7 +484,7 @@ struct ImageEditView: View {
             }
         }
     }
-    
+
     private func processImage() {
         guard let imageData = imageToEdit.jpegData(compressionQuality: 0.8) else { return }
         isProcessing = true
@@ -495,20 +495,20 @@ struct ImageEditView: View {
             do {
                 let jsonFromImage = try await ImageService.shared.extractTextFromImage(imageToEdit)
                 let quality = await ImageService.shared.assessImageQuality(imageToEdit)
-                
+
                 print("Extracted JSON: \(jsonFromImage)")
                 print("Image Quality: \(quality)")
-                
-                if (quality.shouldUseAI) {
+
+                // if (quality.shouldUseAI) {
                     let _ = try await Api.shared.uploadImages(url: url, images: [imageToEdit])
-                } else {
-                    let _ = try await Api.shared.postJSON(url: url, body: [
-                        "data": jsonFromImage
-                    ])
-                }
-            
+                // } else {
+                //     let _ = try await Api.shared.postJSON(url: url, body: [
+                //         "data": jsonFromImage
+                //     ])
+                // }
+
                 await receiptsViewModel.refreshReceipts()
-                
+
                 DispatchQueue.main.async {
                     isProcessing = false
                     let mockUrl = "http://192.168.1.205/receipts/\(UUID().uuidString)"
@@ -529,36 +529,36 @@ struct ImageEditView: View {
 struct ProcessingOverlayView: View {
     let progress: Double
     @State private var rotationAngle: Double = 0
-    
+
     var body: some View {
         ZStack {
             Color.black.opacity(0.7)
                 .ignoresSafeArea()
-            
+
             VStack(spacing: 24) {
                 // Progress circle
                 ZStack {
                     Circle()
                         .stroke(Color.white.opacity(0.3), lineWidth: 4)
                         .frame(width: 80, height: 80)
-                    
+
                     Circle()
                         .trim(from: 0, to: CGFloat(progress))
                         .stroke(Color.blue, style: StrokeStyle(lineWidth: 4, lineCap: .round))
                         .frame(width: 80, height: 80)
                         .rotationEffect(.degrees(-90))
-                    
+
                     Image(systemName: "brain.head.profile")
                         .font(.system(size: 24, weight: .medium))
                         .foregroundColor(.white)
                         .rotationEffect(.degrees(rotationAngle))
                 }
-                
+
                 VStack(spacing: 8) {
                     Text("AI Processing Receipt")
                         .font(.headline)
                         .foregroundColor(.white)
-                    
+
                     Text("\(Int(progress * 100))% Complete")
                         .font(.subheadline)
                         .foregroundColor(.white.opacity(0.8))
@@ -578,24 +578,24 @@ struct ProcessingOverlayView: View {
 struct AddReceiptView: View {
     let imageUrl: String?
     let onDismiss: () -> Void
-    
+
     var body: some View {
         GeometryReader { geometry in
             VStack(spacing: 0) {
                 Spacer()
                     .frame(height: 32)
-                
+
                 // Header with better spacing
                 VStack(spacing: 20) {
                     Text("Receipt Added")
                         .font(.title2)
                         .fontWeight(.bold)
-                    
+
                     if let url = imageUrl {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.system(size: 60))
                             .foregroundColor(.green)
-                        
+
                         Text("Image processed successfully!")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
@@ -603,22 +603,22 @@ struct AddReceiptView: View {
                         Image(systemName: "doc.text.fill")
                             .font(.system(size: 60))
                             .foregroundColor(.blue)
-                        
+
                         Text("Ready for manual entry")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
                 }
                 .padding(.horizontal, 20)
-                
+
                 Spacer()
-                
+
                 if let url = imageUrl {
                     VStack(spacing: 12) {
                         Text("Processed Image URL:")
                             .font(.caption)
                             .foregroundColor(.secondary)
-                        
+
                         Text(url)
                             .font(.caption)
                             .foregroundColor(.blue)
@@ -628,9 +628,9 @@ struct AddReceiptView: View {
                     }
                     .padding(.horizontal, 20)
                 }
-                
+
                 Spacer()
-                
+
                 Button("Done") {
                     onDismiss()
                 }

@@ -28,6 +28,9 @@ struct CalendarView: View {
     var body: some View {
         VStack(spacing: 0) {
             singleLineCalendarView
+                .onChange(of: selectedDate) { _ in
+                    // This will trigger UI updates when selectedDate changes
+                }
             if showingFullCalendar {
                 fullCalendarContent
                     .transition(.asymmetric(
@@ -220,7 +223,7 @@ struct CalendarView: View {
 
     private func dayView(for date: Date, isSingleLine: Bool, isOutsideMonth: Bool = false) -> some View {
         // Determine selection state
-        let isSelected = calendar.isDate(date, inSameDayAs: selectedDate) && !isRangeSelectionEnabled // isSelected only applies in single mode
+        let isSelected = calendar.isDate(date, inSameDayAs: selectedDate) && !isRangeSelectionEnabled
         let isToday = calendar.isDateInToday(date)
 
         let isStartDate = startDate != nil && calendar.isDate(date, inSameDayAs: startDate!)
@@ -332,9 +335,16 @@ struct CalendarView: View {
                     }
                 } else {
                     // Single date selection mode
-                    selectedDate = tappedDateStartOfDay
-                    // Notify parent with the single selected date
-                    onDateSelect((startDate: selectedDate, endDate: nil))
+                    if calendar.isDate(selectedDate, inSameDayAs: tappedDateStartOfDay) {
+                        // Same date tapped again - clear selection
+                        selectedDate = Date().addingTimeInterval(86400) // Set to tomorrow to avoid highlighting
+                        onDateSelect((startDate: nil, endDate: nil))
+                    } else {
+                        // Different date selected
+                        selectedDate = tappedDateStartOfDay
+                        // Notify parent with the single selected date
+                        onDateSelect((startDate: selectedDate, endDate: nil))
+                    }
                     // Collapse calendar after single date selection
                      if showingFullCalendar && !isOutsideMonth {
                          showingFullCalendar = false

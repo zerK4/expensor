@@ -6,11 +6,11 @@ struct Company: Codable, Identifiable {
     var userId: String
     var name: String
     var cif: String? // Make this optional to handle null values
-    
+
     enum CodingKeys: String, CodingKey {
         case id, userId = "user_id", name, cif
     }
-    
+
     init(id: String = UUID().uuidString, userId: String = "", name: String, cif: String? = nil) {
         self.id = id
         self.userId = userId
@@ -30,16 +30,16 @@ struct Company: Codable, Identifiable {
 struct Item: Identifiable, Codable {
     var id: String
     var name: String
-    var quantity: Int
+    var quantity: Double
     var unitPrice: Double
     var total: Double
     var category: Category?
-    
+
     enum CodingKeys: String, CodingKey {
         case id, name, quantity, unitPrice = "unit_price", total, category
     }
-    
-    init(id: String = UUID().uuidString, name: String, quantity: Int, unitPrice: Double, total: Double, category: Category? = nil) {
+
+    init(id: String = UUID().uuidString, name: String, quantity: Double, unitPrice: Double, total: Double, category: Category? = nil) {
         self.id = id
         self.name = name
         self.quantity = quantity
@@ -47,12 +47,12 @@ struct Item: Identifiable, Codable {
         self.total = total
         self.category = category
     }
-    
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.id = try container.decodeIfPresent(String.self, forKey: .id) ?? UUID().uuidString
         self.name = try container.decode(String.self, forKey: .name)
-        self.quantity = try container.decode(Int.self, forKey: .quantity)
+        self.quantity = try container.decode(Double.self, forKey: .quantity)
         self.unitPrice = try container.decode(Double.self, forKey: .unitPrice)
         self.total = try container.decode(Double.self, forKey: .total)
         self.category = try container.decodeIfPresent(Category.self, forKey: .category)
@@ -64,11 +64,11 @@ struct Category: Identifiable, Codable {
     var userId: String
     var name: String
     var icon: String
-    
+
     enum CodingKeys: String, CodingKey {
         case id, userId = "user_id", name, icon
     }
-    
+
     init(id: String = UUID().uuidString, userId: String = "", name: String, icon: String) {
         self.id = id
         self.userId = userId
@@ -90,7 +90,7 @@ struct Tax: Identifiable, Codable {
     var receiptEntryId: String
     var name: String
     var value: Double
-    
+
     enum CodingKeys: String, CodingKey {
         case id, receiptEntryId = "receipt_entry_id", name, value
     }

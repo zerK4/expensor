@@ -75,7 +75,6 @@ final class ReceiptsViewModel: ObservableObject {
         }
     }
 
-
     // Handles date selection from CalendarView (single date or range)
     func applyDateSelection(dateSelection: (startDate: Date?, endDate: Date?)) {
         if let start = dateSelection.startDate, let end = dateSelection.endDate {
@@ -92,7 +91,14 @@ final class ReceiptsViewModel: ObservableObject {
         } else if let start = dateSelection.startDate {
             // Single date selected (startDate is not nil, endDate is nil from CalendarView)
             let normalizedDate = start.startOfDay
-            selectedDateRange = (startDate: normalizedDate, endDate: normalizedDate) // Treat single date as a range of one day
+            
+            // Check if the same single date is already selected - if so, clear the filter
+            if let currentRange = selectedDateRange,
+               currentRange.startDate == normalizedDate && currentRange.endDate == normalizedDate {
+                selectedDateRange = nil // Clear the filter to show all receipts
+            } else {
+                selectedDateRange = (startDate: normalizedDate, endDate: normalizedDate) // Treat single date as a range of one day
+            }
         } else {
             // Selection cleared (both startDate and endDate are nil from CalendarView)
             selectedDateRange = nil
