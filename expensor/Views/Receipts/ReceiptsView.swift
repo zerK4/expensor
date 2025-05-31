@@ -23,6 +23,17 @@ struct ReceiptsView: View {
                         }
                     )
                     .padding(.top, 10)
+
+                // Search Bar and Filter
+                VStack {
+                    TextField("Search receipts...", text: $receiptsViewModel.searchQuery)
+                        .padding(8)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(8)
+                        .padding(.horizontal)
+
+                }
+                .padding(.bottom, 8) // Add some space below search controls
                 
                 if receiptsViewModel.isLoading {
                     VStack {
@@ -56,22 +67,86 @@ struct ReceiptsView: View {
                     }
                     .padding()
                 }  else {
+                    // Search Results Count
+                    if !receiptsViewModel.searchQuery.isEmpty {
+                        Text("\(receiptsViewModel.filteredReceipts.count) Receipts Found")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .padding(.horizontal)
+                            .padding(.top, 4)
+                            .animation(.easeInOut, value: receiptsViewModel.filteredReceipts.count)
+                    }
+
                     List {
-                        if receiptsViewModel.filteredReceipts.isEmpty {
+                        if receiptsViewModel.filteredReceipts.isEmpty && receiptsViewModel.searchQuery.isEmpty && receiptsViewModel.selectedDate == nil {
+                             // Only show EmptyReceiptsView if no filters are applied and list is empty
                             EmptyReceiptsView()
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                                 .listRowInsets(EdgeInsets())
                                 .listRowSeparator(.hidden)
-                        } else {
-                            ForEach(receiptsViewModel.filteredReceipts.sorted { $0.createdAt > $1.createdAt }, id: \.id) { receipt in
-                                ReceiptCard(receipt: receipt) {
-                                    selectedReceipt = receipt
-                                }
-                                .listRowSeparator(.hidden)
+                        } else if receiptsViewModel.filteredReceipts.isEmpty && (!receiptsViewModel.searchQuery.isEmpty || receiptsViewModel.selectedDate != nil) {
+                            // Show a message when filters are applied but no results found
+                            VStack {
+                                Image(systemName: "magnifyingglass")
+                                    .font(.system(size: 48))
+                                    .foregroundColor(.secondary)
+                                Text("No Matching Receipts")
+                                    .foregroundColor(.secondary)
+                                    .padding(.top, 8)
                             }
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .listRowInsets(EdgeInsets())
+                            .listRowSeparator(.hidden)
+
                         }
-                    }
+                        else {
+                            ForEach(receiptsViewModel.filteredReceipts, id: \.id) { receipt in
+                                VStack(alignment: .leading) { // Stack indicators above ReceiptCard
+                                    // Indicators VStack
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        if receipt.matchedName {
+                                            Text("Name Match")
+                                                .font(.system(size: 10, weight: .semibold))
+                                                .foregroundColor(.blue)
+                                                .padding(.horizontal, 4)
+                                                .background(Color.blue.opacity(0.2))
+                                                .cornerRadius(4)
+                                        }
+                                        if receipt.matchedItem {
+                                            Text("Item Match")
+                                                 .font(.system(size: 10, weight: .semibold))
+                                                 .foregroundColor(.green)
+                                                 .padding(.horizontal, 4)
+                                                 .background(Color.green.opacity(0.2))
+                                                 .cornerRadius(4)
+                                        }
+                                        if receipt.matchedCategory {
+                                            // Display category name if available
+                                            Text("Category Match" + (receipt.matchedCategoryName != nil ? ": \(receipt.matchedCategoryName!)" : ""))
+                                                 .font(.system(size: 10, weight: .semibold))
+                                                 .foregroundColor(.orange)
+                                                 .padding(.horizontal, 4)
+                                                 .background(Color.orange.opacity(0.2))
+                                                 .cornerRadius(4)
+                                        }
+                                    }
+                                    // Animation for indicators stack and space below if indicators are visible
+                                    .animation(.easeInOut, value: receipt.matchedName || receipt.matchedItem || receipt.matchedCategory)
+                                    .padding(.bottom, receipt.matchedName || receipt.matchedItem || receipt.matchedCategory ? 4 : 0)
+
+
+                                    ReceiptCard(receipt: receipt) {
+                                        selectedReceipt = receipt
+                                    }
+                                }
+                                .listRowSeparator(.hidden) // Keep the row separator hidden
+                                .listRowBackground(Color.clear) // Ensure no background interferes
+                                .animation(.easeInOut, value: receipt.id) // Animate row changes
+                            }
+                         }
+                     }
                     .listStyle(.plain)
+                    .animation(.easeInOut, value: receiptsViewModel.filteredReceipts.isEmpty) // Animate list changes
                    }
                }
                .refreshable {
@@ -133,11 +208,9 @@ private struct PreviewContent: View {
             items: [],
             taxes: nil,
             date: Date(),
-            categories: sampleCategory,
-            categoryId: sampleCategory.id,
-            companyId: sampleCompany.id,
             paidCash: 25.50,
             paidCard: 74.50,
+            categories: sampleCategory,
             total: 100.0,
             createdAt: Date(),
             updatedAt: Date()

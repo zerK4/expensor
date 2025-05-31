@@ -107,47 +107,88 @@ struct ReceiptEntry: Identifiable, Codable {
     var paidCard: Double?
     var categories: Category?
     var total: Double
-    var categoryId: String
-    var companyId: String
     var createdAt: Date
     var updatedAt: Date
 
-    enum CodingKeys: String, CodingKey {
-        case id, userId = "user_id", companies, items, taxes, date, categories, categoryId = "category_id", companyId = "company_id"
-        case paidCash = "paid_cash", paidCard = "paid_card", total
-        case createdAt = "created_at", updatedAt = "updated_at"
-    }
+    // Transient properties to indicate search match source
+    var matchedName: Bool = false
+    var matchedItem: Bool = false
+    var matchedCategory: Bool = false
+    var matchedCategoryName: String? = nil // New property to store the matched category name
 
-    init(
-        id: String,
-        userId: String,
-        companies: Company,
-        items: [Item],
-        taxes: [String: Double]?,
-        date: Date,
-        categories: Category?,
-        categoryId: String = "",
-        companyId: String = "",
-        paidCash: Double? = nil,
-        paidCard: Double? = nil,
-        total: Double = 0.0,
-        createdAt: Date,
-        updatedAt: Date
-    ) {
+    // Memberwise initializer for preview and manual creation
+    init(id: String,
+         userId: String,
+         companies: Company,
+         items: [Item],
+         taxes: [String: Double]?,
+         date: Date,
+         paidCash: Double?,
+         paidCard: Double?,
+         categories: Category?,
+         total: Double,
+         createdAt: Date,
+         updatedAt: Date) {
         self.id = id
         self.userId = userId
         self.companies = companies
         self.items = items
-        self.total = total
         self.taxes = taxes
         self.date = date
-        self.categories = categories
-        self.categoryId = categoryId
-        self.companyId = companyId
         self.paidCash = paidCash
         self.paidCard = paidCard
+        self.categories = categories
+        self.total = total
         self.createdAt = createdAt
         self.updatedAt = updatedAt
+        self.matchedName = false
+        self.matchedItem = false
+        self.matchedCategory = false
+        self.matchedCategoryName = nil // Initialize the new property
+    }
+
+    // Manual Codable implementation to exclude transient properties
+    enum CodingKeys: String, CodingKey {
+        case id, userId = "user_id", companies, items, taxes, date, paidCash = "paid_cash", paidCard = "paid_card", categories, total, createdAt = "created_at", updatedAt = "updated_at"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        userId = try container.decode(String.self, forKey: .userId)
+        companies = try container.decode(Company.self, forKey: .companies)
+        items = try container.decode([Item].self, forKey: .items)
+        taxes = try container.decodeIfPresent([String: Double].self, forKey: .taxes)
+        date = try container.decode(Date.self, forKey: .date)
+        paidCash = try container.decodeIfPresent(Double.self, forKey: .paidCash)
+        paidCard = try container.decodeIfPresent(Double.self, forKey: .paidCard)
+        categories = try container.decodeIfPresent(Category.self, forKey: .categories)
+        total = try container.decode(Double.self, forKey: .total)
+        createdAt = try container.decode(Date.self, forKey: .createdAt)
+        updatedAt = try container.decode(Date.self, forKey: .updatedAt)
+
+        // Initialize transient properties to default values
+        matchedName = false
+        matchedItem = false
+        matchedCategory = false
+        matchedCategoryName = nil // Initialize the new transient property
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(userId, forKey: .userId)
+        try container.encode(companies, forKey: .companies)
+        try container.encode(items, forKey: .items)
+        try container.encodeIfPresent(taxes, forKey: .taxes)
+        try container.encode(date, forKey: .date)
+        try container.encodeIfPresent(paidCash, forKey: .paidCash)
+        try container.encodeIfPresent(paidCard, forKey: .paidCard)
+        try container.encodeIfPresent(categories, forKey: .categories)
+        try container.encode(total, forKey: .total)
+        try container.encode(createdAt, forKey: .createdAt)
+        try container.encode(updatedAt, forKey: .updatedAt)
+        // Do not encode transient properties
     }
 }
 
@@ -155,23 +196,23 @@ struct ReceiptEntry: Identifiable, Codable {
 extension JSONDecoder {
     static var receiptDecoder: JSONDecoder {
         let decoder = JSONDecoder()
-        
+
         // Configure date decoding for ISO 8601 format
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS+00:00"
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.timeZone = TimeZone(secondsFromGMT: 0)
-        
+
         // Fallback formatter for dates without microseconds
         let fallbackFormatter = DateFormatter()
         fallbackFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss+00:00"
         fallbackFormatter.locale = Locale(identifier: "en_US_POSIX")
         fallbackFormatter.timeZone = TimeZone(secondsFromGMT: 0)
-        
+
         decoder.dateDecodingStrategy = .custom { decoder in
             let container = try decoder.singleValueContainer()
             let dateString = try container.decode(String.self)
-            
+
             if let date = formatter.date(from: dateString) {
                 return date
             } else if let date = fallbackFormatter.date(from: dateString) {
@@ -180,7 +221,7 @@ extension JSONDecoder {
                 throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot decode date string \(dateString)")
             }
         }
-        
+
         return decoder
     }
 }
