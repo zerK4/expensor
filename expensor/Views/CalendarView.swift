@@ -9,13 +9,18 @@ struct CalendarView: View {
     @State private var didAppear = false
     @State private var showingMonthPicker = false
 
-    let onDateSelect: (Date) -> Void
+    // State for date range selection
+    @State private var isRangeSelectionEnabled = false
+    @State private var startDate: Date? = nil
+    @State private var endDate: Date? = nil
+
+    let onDateSelect: ((startDate: Date?, endDate: Date?)) -> Void
     let markedDates: [Date]
 
     private let daysOfWeek = ["S", "M", "T", "W", "T", "F", "S"]
     private let calendar = Calendar.current
 
-    init(markedDates: [Date] = [], onDateSelected: @escaping (Date) -> Void) {
+    init(markedDates: [Date] = [], onDateSelected: @escaping ((startDate: Date?, endDate: Date?)) -> Void) {
         self.markedDates = markedDates
         self.onDateSelect = onDateSelected
     }
@@ -39,8 +44,9 @@ struct CalendarView: View {
                 currentPage = 0
                 currentMonth = calendar.date(byAdding: .month, value: currentPage, to: Date())!
                 didAppear = true
-                selectedDate = Date()
-                onDateSelect(selectedDate)
+                selectedDate = Date().startOfDay // Ensure start of day
+                // Notify parent with the initial single date
+                onDateSelect((startDate: selectedDate, endDate: nil))
             }
         }
     }
@@ -56,7 +62,32 @@ struct CalendarView: View {
                             withAnimation { showingFullCalendar = true }
                         }
                     }
-                Spacer()
+                // Spacer() // Keep spacer here for alignment
+                Button(action: {
+                    withAnimation {
+                        isRangeSelectionEnabled.toggle()
+                        // Clear current selection when switching modes
+                        startDate = nil
+                        endDate = nil
+                        // Notify parent that selection is cleared
+                        onDateSelect((startDate: nil, endDate: nil))
+                    }
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: isRangeSelectionEnabled ? "calendar.badge.filled.time" : "calendar")
+                            .font(.caption)
+                        Text(isRangeSelectionEnabled ? "Range" : "Single")
+                            .font(.caption)
+                    }
+                    .padding(.vertical, 4)
+                    .padding(.horizontal, 8)
+                    .background(isRangeSelectionEnabled ? Color.blue.opacity(0.2) : Color(.systemGray5))
+                    .foregroundColor(isRangeSelectionEnabled ? .blue : .primary)
+                    .cornerRadius(8)
+                }
+
+                Spacer() // Put spacer here
+
                 Button(action: {
                     withAnimation {
                         showingFullCalendar.toggle()
@@ -188,8 +219,14 @@ struct CalendarView: View {
     }
 
     private func dayView(for date: Date, isSingleLine: Bool, isOutsideMonth: Bool = false) -> some View {
-        let isSelected = calendar.isDate(date, inSameDayAs: selectedDate)
+        // Determine selection state
+        let isSelected = calendar.isDate(date, inSameDayAs: selectedDate) && !isRangeSelectionEnabled // isSelected only applies in single mode
         let isToday = calendar.isDateInToday(date)
+
+        let isStartDate = startDate != nil && calendar.isDate(date, inSameDayAs: startDate!)
+        let isEndDate = endDate != nil && calendar.isDate(date, inSameDayAs: endDate!)
+        let isWithinRange = startDate != nil && endDate != nil && date.startOfDay >= startDate!.startOfDay && date.startOfDay <= endDate!.startOfDay
+
         let hasMarkedEvent = markedDates.contains { calendar.isDate($0, inSameDayAs: date) }
 
         let fontSize: CGFloat = isSingleLine ? 16 : 18
@@ -200,52 +237,112 @@ struct CalendarView: View {
 
         return VStack(spacing: 2) {
             ZStack {
-                if isSelected {
-                    RoundedRectangle(cornerRadius: cornerRadius)
-                        .fill(Color.blue)
-                        .frame(width: rectSize, height: rectSize)
-                } else if isToday {
-                    RoundedRectangle(cornerRadius: cornerRadius)
-                        .stroke(Color.blue, lineWidth: 2)
-                        .frame(width: rectSize, height: rectSize)
+                // Background rectangle based on selection mode and state
+                if isRangeSelectionEnabled {
+                    if isStartDate || isEndDate { // Highlight start or end date with solid blue
+                        RoundedRectangle(cornerRadius: cornerRadius)
+                            .fill(Color.blue)
+                            .frame(width: rectSize, height: rectSize)
+                    } else if isWithinRange { // Highlight dates within the range with lighter blue
+                        RoundedRectangle(cornerRadius: cornerRadius)
+                            .fill(Color.blue.opacity(0.3))
+                            .frame(width: rectSize, height: rectSize)
+                    } else if isToday { // Show today marker if it\'s today but not selected
+                         RoundedRectangle(cornerRadius: cornerRadius)
+                             .stroke(Color.blue, lineWidth: 2)
+                             .frame(width: rectSize, height: rectSize)
+                    }
+                } else { // Single selection mode
+                    if isSelected { // Highlight the single selected date
+                        RoundedRectangle(cornerRadius: cornerRadius)
+                            .fill(Color.blue)
+                            .frame(width: rectSize, height: rectSize)
+                    } else if isToday { // Show today marker if it\'s today but not selected
+                        RoundedRectangle(cornerRadius: cornerRadius)
+                            .stroke(Color.blue, lineWidth: 2)
+                            .frame(width: rectSize, height: rectSize)
+                    }
                 }
+
+                // Text for the day number
                 Text(date.formatted(.dateTime.day()))
-                    .font(.system(size: fontSize, weight: isSelected ? .bold : .regular))
+                    .font(.system(size: fontSize, weight: (isSelected || isStartDate || isEndDate) ? .bold : .regular)) // Bold for selected single date or range ends
                     .foregroundColor(
-                        isOutsideMonth ? Color.secondary.opacity(0.5) :
-                        isSelected ? .white :
-                        isToday ? .blue : .primary
+                        isOutsideMonth ? Color.secondary.opacity(0.5) : // Grey out dates outside the current month
+                        (isRangeSelectionEnabled && isWithinRange) ? .white : // White text for dates within the range
+                        isSelected ? .white : // White text for the single selected date
+                        isToday ? .blue : .primary // Blue text for today, default primary otherwise
                     )
             }
+            // Dot indicator for marked dates
             if hasMarkedEvent {
                 Circle()
-                    .fill(isSelected ? .white : .red)
+                    // White dot if the date is selected (single or range), red otherwise
+                    .fill((isRangeSelectionEnabled && isWithinRange) || (!isRangeSelectionEnabled && isSelected) ? .white : .red)
                     .frame(width: dotSize, height: dotSize)
             } else {
+                // Placeholder to maintain spacing when no dot is present
                 Spacer().frame(height: dotSize)
             }
         }
-        .frame(height: vStackTotalHeight)
-        .contentShape(Rectangle())
+        .frame(height: vStackTotalHeight) // Ensure consistent cell height
+        .contentShape(Rectangle()) // Make the whole area tappable
         .onTapGesture {
             let generator = UIImpactFeedbackGenerator(style: .light)
-            generator.impactOccurred()
+            generator.impactOccurred() // Provide haptic feedback on tap
+
+            let tappedDateStartOfDay = date.startOfDay // Normalize tapped date
+
             withAnimation(.easeInOut(duration: 0.2)) {
-                selectedDate = date
-                onDateSelect(date)
-                if !calendar.isDate(date, equalTo: currentMonth, toGranularity: .month) {
-                    currentMonth = date.startOfMonth
-                    let components = calendar.dateComponents([.month], from: Date().startOfMonth, to: currentMonth)
-                    if let monthOffset = components.month {
-                        currentPage = monthOffset
+                if isRangeSelectionEnabled {
+                    if startDate == nil {
+                        // First tap: Set start date
+                        startDate = tappedDateStartOfDay
+                        endDate = nil // Ensure endDate is nil when setting start
+                        showingFullCalendar = true // Keep full calendar open to select end date
+                        // Optionally notify parent that range selection has started with just the start date
+                        // onDateSelect((startDate: startDate, endDate: nil)) // Decide if partial range selection should trigger filter updates
+                    } else if endDate == nil {
+                        // Second tap: Set end date
+                        if tappedDateStartOfDay >= startDate! {
+                            // Valid range: end date is after or same as start date
+                            endDate = tappedDateStartOfDay
+                            // Notify parent with the complete range
+                            onDateSelect((startDate: startDate, endDate: endDate))
+                            // Collapse calendar after selecting the range
+                             if showingFullCalendar && !isOutsideMonth {
+                                 showingFullCalendar = false
+                             }
+                        } else {
+                            // Invalid range: tapped date is before start date
+                            // Reset selection and set the tapped date as the new start date
+                            startDate = tappedDateStartOfDay
+                            endDate = nil
+                            // Notify parent that the selection is reset (no range selected yet)
+                            onDateSelect((startDate: nil, endDate: nil))
+                            showingFullCalendar = true // Keep calendar open for new range selection
+                        }
+                    } else {
+                        // Third tap (or more) while a range is already selected: Start a new range
+                        startDate = tappedDateStartOfDay
+                        endDate = nil
+                        // Notify parent that the previous range is cleared and a new selection is starting
+                        onDateSelect((startDate: nil, endDate: nil))
+                        showingFullCalendar = true // Keep calendar open for new range selection
                     }
-                }
-                if showingFullCalendar && !isOutsideMonth {
-                    showingFullCalendar = false
-                }
-            }
-        }
-    }
+                } else {
+                    // Single date selection mode
+                    selectedDate = tappedDateStartOfDay
+                    // Notify parent with the single selected date
+                    onDateSelect((startDate: selectedDate, endDate: nil))
+                    // Collapse calendar after single date selection
+                     if showingFullCalendar && !isOutsideMonth {
+                         showingFullCalendar = false
+                     }
+                 }
+             }
+         }
+     }
 
     private func daysInMonth(_ date: Date) -> [Date] {
         let range = calendar.range(of: .day, in: .month, for: date)!
@@ -339,7 +436,7 @@ extension Date {
         let calendar = Calendar.current
         return calendar.date(from: calendar.dateComponents([.year, .month], from: self))!
     }
-    
+
     var utcStartOfDay: Date {
        Calendar(identifier: .gregorian).date(from: Calendar(identifier: .gregorian).dateComponents(in: TimeZone(secondsFromGMT: 0)!, from: self))!
    }
@@ -380,12 +477,13 @@ struct CalendarView_Previews: PreviewProvider {
             Calendar.current.date(byAdding: .day, value: 7, to: Date())!,
             Calendar.current.date(byAdding: .day, value: 15, to: Date())!
         ]
-            
+
         ZStack(alignment: .top) {
             Color.black.ignoresSafeArea()
-            
+
             CalendarView(markedDates: sampleMarkedDates, onDateSelected: { selectedDate in
-                print("Selected date: \(selectedDate.formatted())")
+                // selectedDate is now a tuple (startDate: Date?, endDate: Date?)
+                print("Selected date range: \(selectedDate.startDate?.formatted() ?? "nil") - \(selectedDate.endDate?.formatted() ?? "nil"))")
             })
             .ignoresSafeArea(edges: .top)
         }

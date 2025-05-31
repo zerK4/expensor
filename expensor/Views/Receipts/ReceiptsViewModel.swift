@@ -6,16 +6,18 @@ final class ReceiptsViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
 
-    @Published var selectedDate: Date? = nil
+    @Published var selectedDateRange: (startDate: Date, endDate: Date)? = nil // Represents the selected date range or single date
     @Published var searchQuery: String = ""
 
     var filteredReceipts: [ReceiptEntry] {
         var results = receipts
 
-        // Apply date filter
-        if let selectedDate = selectedDate {
+        // Apply date range filter
+        if let range = selectedDateRange {
             results = results.filter { receipt in
-                Calendar.current.isDate(receipt.date, inSameDayAs: selectedDate.startOfDay)
+                let receiptDate = receipt.date.startOfDay
+                // Check if the receipt date is within the selected range (inclusive)
+                return receiptDate >= range.startDate && receiptDate <= range.endDate
             }
         }
 
@@ -58,8 +60,8 @@ final class ReceiptsViewModel: ObservableObject {
             }
         }
 
-        // Sort the results (assuming sorting by date descending is still desired for the final list)
-        return results.sorted { $0.createdAt > $1.createdAt }
+        // Sort the results by receipt date ascending (older to newer)
+        return results.sorted { $0.date < $1.date }
     }
 
     private var loadReceiptsTask: Task<Void, Never>? // Store the task
@@ -72,15 +74,28 @@ final class ReceiptsViewModel: ObservableObject {
             await loadReceipts()
         }
     }
-    
-    func filterByDate(_ date: Date) {
-        let normalizedDate = date.startOfDay
-        if let selected = selectedDate, Calendar.current.isDate(selected, inSameDayAs: normalizedDate) {
-            // Tapping the same date again clears the date filter
-            selectedDate = nil
+
+
+    // Handles date selection from CalendarView (single date or range)
+    func applyDateSelection(dateSelection: (startDate: Date?, endDate: Date?)) {
+        if let start = dateSelection.startDate, let end = dateSelection.endDate {
+            // Range selected (ensure start is before or same as end)
+            let normalizedStartDate = start.startOfDay
+            let normalizedEndDate = end.startOfDay
+            if normalizedStartDate <= normalizedEndDate {
+                selectedDateRange = (startDate: normalizedStartDate, endDate: normalizedEndDate)
+            } else {
+                 // Handle case where end date is before start date (e.g., reset or treat as single)
+                 // Treating as single selection of the later date (which is start in this case)
+                 selectedDateRange = (startDate: normalizedStartDate, endDate: normalizedStartDate)
+            }
+        } else if let start = dateSelection.startDate {
+            // Single date selected (startDate is not nil, endDate is nil from CalendarView)
+            let normalizedDate = start.startOfDay
+            selectedDateRange = (startDate: normalizedDate, endDate: normalizedDate) // Treat single date as a range of one day
         } else {
-            // Otherwise, apply the new date filter
-            selectedDate = normalizedDate
+            // Selection cleared (both startDate and endDate are nil from CalendarView)
+            selectedDateRange = nil
         }
         // filteredReceipts computed property will handle the update
     }

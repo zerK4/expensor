@@ -16,10 +16,9 @@ struct ReceiptsView: View {
                 VStack(spacing: 0) {
                     CalendarView(
                         markedDates: receiptsViewModel.markedDates(),
-                        onDateSelected: { date in
-                            let normalizedDate = date.startOfDay
-                            print(normalizedDate, "the selected date")
-                            receiptsViewModel.filterByDate(normalizedDate)
+                        onDateSelected: { dateSelection in
+                            // Pass the selection tuple to the new view model method
+                            receiptsViewModel.applyDateSelection(dateSelection: dateSelection)
                         }
                     )
                     .padding(.top, 10)
@@ -78,13 +77,13 @@ struct ReceiptsView: View {
                     }
 
                     List {
-                        if receiptsViewModel.filteredReceipts.isEmpty && receiptsViewModel.searchQuery.isEmpty && receiptsViewModel.selectedDate == nil {
+                        if receiptsViewModel.filteredReceipts.isEmpty && receiptsViewModel.searchQuery.isEmpty && receiptsViewModel.selectedDateRange == nil {
                              // Only show EmptyReceiptsView if no filters are applied and list is empty
                             EmptyReceiptsView()
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                                 .listRowInsets(EdgeInsets())
                                 .listRowSeparator(.hidden)
-                        } else if receiptsViewModel.filteredReceipts.isEmpty && (!receiptsViewModel.searchQuery.isEmpty || receiptsViewModel.selectedDate != nil) {
+                        } else if receiptsViewModel.filteredReceipts.isEmpty && (!receiptsViewModel.searchQuery.isEmpty || receiptsViewModel.selectedDateRange != nil) {
                             // Show a message when filters are applied but no results found
                             VStack {
                                 Image(systemName: "magnifyingglass")
@@ -102,6 +101,14 @@ struct ReceiptsView: View {
                         else {
                             ForEach(receiptsViewModel.filteredReceipts, id: \.id) { receipt in
                                 VStack(alignment: .leading) { // Stack indicators above ReceiptCard
+                                    // Display date when filtering is active
+                                    if !receiptsViewModel.searchQuery.isEmpty || receiptsViewModel.selectedDateRange != nil {
+                                        Text(receipt.date.formatted(.dateTime.month(.abbreviated).day().year()))
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                            .padding(.bottom, 2) // Small space below date
+                                    }
+
                                     // Indicators VStack
                                     VStack(alignment: .leading, spacing: 4) {
                                         if receipt.matchedName {
